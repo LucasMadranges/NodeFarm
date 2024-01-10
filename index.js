@@ -11,7 +11,7 @@ const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const productData = JSON.parse(data);
 // SERVER
 const server = http.createServer((req, res) => {
-    const pathName = req.url;
+    const {query, pathname} = url.parse(req.url, true);
 
     function replaceTemplate(temp, product) {
         let output = temp.replace(/{%PRODUCTNAME%}/g, product.productName);
@@ -30,7 +30,7 @@ const server = http.createServer((req, res) => {
     }
 
 
-    if (pathName === '/' || pathName === '/overview') { // OVERVIEW
+    if (pathname === '/' || pathname === '/overview') { // OVERVIEW
         res.writeHead(200, {
             'Content-type': 'text/html',
         });
@@ -38,9 +38,15 @@ const server = http.createServer((req, res) => {
         const cardHtml = productData.map(product => replaceTemplate(templateCard, product)).join('')
         const output = templateOverview.replace('{%PRODUCT_CARDS%}', cardHtml)
         res.end(output)
-    } else if (pathName === '/product') { // PRODUCT
-        res.end('This is PRODUCT')
-    } else if (pathName === '/api') { // API
+    } else if (pathname === '/product') { // PRODUCT
+        res.writeHead(200, {
+            'Content-type': 'text/html',
+        });
+        const product = productData[query.id];
+        const output = replaceTemplate(templateProduct, product);
+
+        res.end(output)
+    } else if (pathname === '/api') { // API
         res.writeHead(200, {'Content-type': 'application/json'})
         res.end(data)
     } else { // NOT FOUND
